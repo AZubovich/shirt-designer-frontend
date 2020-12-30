@@ -1,0 +1,1 @@
+export const default_woman_shirt = 'https://ae01.alicdn.com/kf/HTB1lYYsRFXXXXXTapXXq6xXFXXXH/GOOD-Quality-5-Color-S-2XL-Plain-T-Shirt-Women-Elastic-Basic-T-shirts-Female-Casual.jpg_640x640.jpg'
