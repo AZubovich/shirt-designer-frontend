@@ -4,6 +4,7 @@ import './index.scss';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import 'bootstrap/dist/css/bootstrap.css';
+import 'mdbreact/dist/css/mdb.css';
 
 ReactDOM.render(
   <React.StrictMode>

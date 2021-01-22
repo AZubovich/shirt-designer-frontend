@@ -1,25 +1,194 @@
 import React, { useState, useEffect } from 'react';
 import { fabric } from 'fabric';
-import { default_woman_shirt } from '../constants/constants'
+import { 
+  default_woman_shirt, 
+  default_man_shirt, 
+  apiURL,
+  shirtColors,
+} from '../constants/constants';
 import Header from '../components/Header';
+import Button from 'react-bootstrap/Button';
+import ToggleButton from 'react-bootstrap/ToggleButton';
+import Select from 'react-select'
+import { MDBInput } from "mdbreact";
+import axios from 'axios';
 
 function Designer () {
 
   useEffect(() => {
-    setCanvas();
+    if(!canvas)
+      setCanvas(initCanvas());
 	});
 
-  const setCanvas = () =>{
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [price, setPrice] = useState('');
+  const [canvas, setCanvas] = useState(null);
+  const [isFemale, setIsFemale] = useState(false);
+  const [textColor, setTextColor] = useState(null);
+  const [backgroundTextColor, setBackgroundTextColor] = useState(null);
+
+  const initCanvas = () => {
     var canvas = new fabric.Canvas('c');
-    canvas.setBackgroundImage(default_woman_shirt, canvas.renderAll.bind(canvas));
+    setBackgroundImage(canvas, default_man_shirt);
+    return canvas;
+  };
+
+  const setBackgroundImage = (canvas, src, color=null) => {
+    var imgEl = document.createElement('img');
+    imgEl.crossOrigin = 'anonymous';
+    imgEl.onload = function() {
+      var image = new fabric.Image(imgEl);
+      image.filters = [new fabric.Image.filters.HueRotation()];
+      image.filters[0].rotation = color;
+      image.applyFilters();
+      canvas.requestRenderAll();
+      canvas.setBackgroundImage(image, canvas.renderAll.bind(canvas));
+    }
+    imgEl.src = src;
+  }
+
+  const changeBackground = (image) => { 
+    setBackgroundImage(canvas, image);
+    setCanvas(canvas);
+  }
+
+  const setMale = () => {
+    setIsFemale(false);
+    changeBackground(default_man_shirt);
+  };
+
+  const setFemale = () => {
+    setIsFemale(true);
+    changeBackground(default_woman_shirt);
+  };
+
+
+  const addText = () => {
+    var text = new fabric.IText('Add text', { left: 40, top: 100 });
+    setCanvas(canvas.add(text).setActiveObject(text));
+  };
+
+  const deleteObject = () => {
+    setCanvas(canvas.remove(canvas.getActiveObject()));
+  };
+
+  const changeColor = (e) => {
+    var src = isFemale ? default_woman_shirt : default_man_shirt
+    //var color = 2 * Math.random() - 1;
+    var color = e.value;
+    console.log(color);
+    setBackgroundImage(canvas, src, color);
+  };
+
+  const imageUpload = (e) => {
+    var t_canvas = canvas;
+    var reader = new FileReader();
+    reader.onload = function (event){
+      var imgObj = new Image();
+      imgObj.src = event.target.result;
+      imgObj.onload = function () {
+        var image = new fabric.Image(imgObj);
+        image.filters.push(new fabric.Image.filters.Resize({scaleX: 0.1, scaleY: 0.1 }));
+        t_canvas.centerObject(image);
+        t_canvas.add(image);
+        t_canvas.renderAll();
+        setCanvas(t_canvas);
+      }
+    }
+    reader.readAsDataURL(e.target.files[0]);
+  };
+
+  const sendShirt = () => {
+    //var model = JSON.stringify(canvas);
+    var model = canvas.toSVG();
+    axios.post(`${apiURL}shirts`, 
+         { title: title, description: description, price: parseFloat(price), model: model })
+         .then((res) => console.log(res.data));
+  };
+
+  function setStyle(object, styleName, value) {
+    if (object.setSelectionStyles && object.isEditing) {
+        var style = { };
+        style[styleName] = value;
+        object.setSelectionStyles(style).setCoords();
+    }
+    else {
+        object[styleName] = value;
+    }
+    canvas.renderAll();
+  };
+
+
+  function addHandler(id, fn, eventName) {
+    document.getElementById(id)[eventName || 'onclick'] = function() {
+        var el = this;
+        var obj = canvas.getActiveObject()
+        if (obj) {
+            fn.call(el, obj);
+            canvas.renderAll();
+        }
+    };
+  };  
+
+  const textColorChange = (e) => {
+    addHandler('color', function(obj) {
+      setStyle(obj, 'fill', e.target.value);
+    }, 'onchange');
+    setTextColor(e.target.value);
+  };
+
+  const textBackgroundColorChange = (e) => {
+    addHandler('bg-color', function(obj) {
+      setStyle(obj, 'textBackgroundColor', e.target.value);
+    }, 'onchange');
+    setBackgroundTextColor(e.target.value);
+  };
+
+  const createShirt = () => {
+    sendShirt();
   };
 
   return (
     <div className="designer-page">
       <Header />
       <div className="designer">
-        <h1>Hi, everyone. This a Designer</h1>
-        <canvas width="580" height="580" id="c"></canvas>
+        <div className="designer-form">
+          <MDBInput 
+            label="Shirt title"
+            value={title}
+            onChange={e => setTitle(e.target.value)} 
+            outline
+          />
+          <MDBInput
+            type="textarea"
+            label="Shirt description"
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            outline 
+          />
+          <MDBInput 
+            label="Shirt price"
+            value={price}
+            onChange={e => setPrice(e.target.value)}
+            outline
+          />
+        </div>
+        <Button variant="primary" onClick={setMale}>Male</Button>
+        <Button variant="primary" onClick={setFemale}>Female</Button>
+        <Button variant="primary" onClick={changeColor}>Change color</Button>
+        <Select options={shirtColors} onChange={changeColor} />
+        <div>
+          <label>Color:</label>
+          <input type="color" value={textColor} id="color" size="10" onChange={textColorChange} />
+          <label>Background color:</label>
+          <input type="color" value={backgroundTextColor} id="bg-color" size="10" onChange={textBackgroundColorChange} />
+        </div>
+        <canvas className="canvas" width="580" height="580" id="c"></canvas>
+        <Button variant="success" onClick={createShirt}>Create</Button>
+        <Button variant="primary" onClick={addText}>Add text</Button>
+        <Button variant="primary" onClick={deleteObject}>Delete object</Button>
+        <input type="file" id="imgLoader" accept="image/*" onChange={imageUpload} />        
       </div>
     </div>
   );
