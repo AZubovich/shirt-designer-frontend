@@ -30,6 +30,7 @@ function Designer () {
   const [backgroundTextColor, setBackgroundTextColor] = useState(null);
   const [errors, setErrors] = useState(null);
   const history = useHistory();
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
 
   const renderErrors = () => {
     if (errors === null) return null;
@@ -116,11 +117,8 @@ function Designer () {
 
   const sendShirt = () => {
     //var model = JSON.stringify(canvas);
-    var model = canvas.toSVG();
-    //var image = new Image();
-    //image.src = canvas.toDataURL("png");
-    //console.log(image);
-    console.log(canvas.toDataURL("png"));
+    //var model = canvas.toSVG();
+    console.log(axios.defaults.headers.Authorization);
     axios.post(`${apiURL}shirts`, 
          { title: title, description: description, price: parseFloat(price), model: 'fd', image: canvas.toDataURL("png")})
          .then((res) => {

@@ -17,6 +17,7 @@ function Login () {
       { username: username, password: password })
          .then((res) => {
             localStorage.setItem('currentUser', JSON.stringify(res.data));
+            axios.defaults.headers.Authorization = `Bearer ${res.data.data.token}`;
             history.push('/');
           })
         .catch((err) => {

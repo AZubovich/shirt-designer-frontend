@@ -31,6 +31,7 @@ function SignUp () {
       { username: username, password: password })
        .then((res) => {
         localStorage.setItem('currentUser', JSON.stringify(res.data));
+        axios.defaults.headers.Authorization = `Bearer ${res.data.token}`;
         history.push('/');
        })
        .catch((err) => {

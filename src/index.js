@@ -7,11 +7,6 @@ import 'bootstrap/dist/css/bootstrap.css';
 import 'mdbreact/dist/css/mdb.css';
 import axios from 'axios';
 
-const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-if (currentUser !== null) {
-  axios.defaults.headers.Authorization = `Bearer ${currentUser.data.token}`;
-}
-
 ReactDOM.render(
   <React.StrictMode>
     <App />
