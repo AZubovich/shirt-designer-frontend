@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { default_woman_shirt } from '../constants/constants';
 
 const ShirtCard = ({ shirt }) => {
-
+  console.log(shirt.image);
+  const src = shirt.image ? shirt.image : default_woman_shirt
   return (
     <div className="card mr-5 mb-5 card bg-dark text-light">
       <div className="d-flex justify-content-center mt-2 mr-2 ml-2">
         <img
-          src={ default_woman_shirt }
+          src={src}
           width="280"
           height="280"
           alt="User"

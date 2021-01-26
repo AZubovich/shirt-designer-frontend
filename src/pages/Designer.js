@@ -12,6 +12,7 @@ import ToggleButton from 'react-bootstrap/ToggleButton';
 import Select from 'react-select'
 import { MDBInput } from "mdbreact";
 import axios from 'axios';
+import { useHistory } from "react-router-dom";
 
 function Designer () {
 
@@ -27,6 +28,20 @@ function Designer () {
   const [isFemale, setIsFemale] = useState(false);
   const [textColor, setTextColor] = useState(null);
   const [backgroundTextColor, setBackgroundTextColor] = useState(null);
+  const [errors, setErrors] = useState(null);
+  const history = useHistory();
+
+  const renderErrors = () => {
+    if (errors === null) return null;
+    return Object.entries(errors).map(([k, v]) => (
+      <div className="alert alert-danger alert-dismissible fade show" role="alert" key={`${k} ${v}`}>
+        <strong>Error:</strong> {k} {''} {v}
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+       </div>
+    ));
+  };
 
   const initCanvas = () => {
     var canvas = new fabric.Canvas('c');
@@ -102,9 +117,19 @@ function Designer () {
   const sendShirt = () => {
     //var model = JSON.stringify(canvas);
     var model = canvas.toSVG();
+    //var image = new Image();
+    //image.src = canvas.toDataURL("png");
+    //console.log(image);
+    console.log(canvas.toDataURL("png"));
     axios.post(`${apiURL}shirts`, 
-         { title: title, description: description, price: parseFloat(price), model: model })
-         .then((res) => console.log(res.data));
+         { title: title, description: description, price: parseFloat(price), model: 'fd', image: canvas.toDataURL("png")})
+         .then((res) => {
+           history.push('/');
+         })
+         .catch((err) => {
+            console.log(err.response);
+            //setErrors(err.response.data.errors);
+         });
   };
 
   function setStyle(object, styleName, value) {
@@ -153,6 +178,7 @@ function Designer () {
     <div className="designer-page">
       <Header />
       <div className="designer">
+        {renderErrors()}
         <div className="designer-form">
           <MDBInput 
             label="Shirt title"
@@ -176,7 +202,6 @@ function Designer () {
         </div>
         <Button variant="primary" onClick={setMale}>Male</Button>
         <Button variant="primary" onClick={setFemale}>Female</Button>
-        <Button variant="primary" onClick={changeColor}>Change color</Button>
         <Select options={shirtColors} onChange={changeColor} />
         <div>
           <label>Color:</label>
@@ -188,7 +213,7 @@ function Designer () {
         <Button variant="success" onClick={createShirt}>Create</Button>
         <Button variant="primary" onClick={addText}>Add text</Button>
         <Button variant="primary" onClick={deleteObject}>Delete object</Button>
-        <input type="file" id="imgLoader" accept="image/*" onChange={imageUpload} />        
+        <input type="file" id="imgLoader" accept="image/*" onChange={imageUpload} />       
       </div>
     </div>
   );
